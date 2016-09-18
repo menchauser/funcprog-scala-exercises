@@ -51,6 +51,21 @@ sealed trait Stream[+A] {
     map(f).foldRight(Empty: Stream[B])((as, b) => as.append(() => b))
   }
 
+
+  def map2[B](f: A => B): Stream[B] = {
+    Stream.unfold(this) {
+      case Cons(h, t) => Some((f(h()), t()))
+      case _ => None
+    }
+  }
+
+  def take2(n: Int): Stream[A] = ???
+
+  def takeWhile3(p: (A) => Boolean): Stream[A] = ???
+
+  def zipWith[A, B, C](as: Stream[A], bs: Stream[B])(f: (A, B) => C): Stream[C] = ???
+
+  def zipAll[B](s2: Stream[B]): Stream[(Option[A], Option[B])] = ???
 }
 
 case object Empty extends Stream[Nothing] {
@@ -91,4 +106,28 @@ object Stream {
 
   def apply[A](as: A*): Stream[A] =
     if (as.isEmpty) empty else cons(as.head, apply(as.tail: _*))
+
+  def constant[A](a: A): Stream[A] = cons(a, constant(a))
+
+  def from(n: Int): Stream[Int] = cons(n, from(n + 1))
+
+  def fibs: Stream[Int] = {
+    def go(a: Int, b: Int): Stream[Int] = cons(b, go(b, a + b))
+
+    cons(0, go(0, 1))
+  }
+
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+    f(z) map { case (a, s) =>
+      cons(a, unfold(s)(f))
+    } getOrElse Empty
+  }
+
+  def fibs2: Stream[Int] = unfold((0, 1)) { case (a, b) => Some(a, (b, a + b)) }
+
+  def from2(n: Int): Stream[Int] = unfold(n)(x => Some(x, x + 1))
+
+  def constant2[A](a: A): Stream[A] = unfold(a)(x => Some(x, x))
+
+  def ones2: Stream[Int] = unfold(1)(x => Some(x, x))
 }

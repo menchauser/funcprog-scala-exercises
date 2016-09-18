@@ -29,3 +29,21 @@ res.toList
 
 val fmRes = s.flatMap(a => Stream(a, a + 1))
 fmRes.toList
+
+val x = Stream(1, 2, 3, 4).map(_ + 10).filter(_ % 2 == 0)
+
+val ones: Stream[Int] = Stream.cons(1, ones)
+
+ones.take(11).toList
+
+Stream.constant("a").take(5).toList
+
+Stream.from(932).take(10).toList
+
+Stream.fibs.take(10).toList
+
+Stream.unfold(1)(x => Some(x, x + 1)).take(10).toList
+
+Stream.fibs2.take(10).toList
+
+Stream.from2(932).take(5).toList
