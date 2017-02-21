@@ -76,6 +76,10 @@ package object parallel {
     def run[A](s: ExecutorService)(a: Par[A]): Future[A] = a(s)
 
 
+    def equal[A](e: ExecutorService)(lp: Par[A], rp: Par[A]): Boolean =
+      lp(e).get() == rp(e).get()
+
+
     private case class UnitFuture[A](get: A) extends Future[A] {
       override def get(timeout: Long, unit: TimeUnit): A = get
 

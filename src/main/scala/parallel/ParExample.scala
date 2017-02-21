@@ -16,4 +16,11 @@ object ParExample extends App {
 
   service.shutdown()
   service.awaitTermination(5, TimeUnit.SECONDS)
+
+  val singleService = Executors.newFixedThreadPool(1)
+  val a = Par.lazyUnit(42 + 1)
+  println(Par.equal(singleService)(a, Par.fork(a)))
+
+  singleService.shutdown()
+  singleService.awaitTermination(5, TimeUnit.SECONDS)
 }
