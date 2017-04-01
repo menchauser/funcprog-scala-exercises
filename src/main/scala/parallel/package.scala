@@ -36,6 +36,10 @@ package object parallel {
       }
 
 
+    def delay[A](a: => Par[A]): Par[A] =
+      es => a(es)
+
+
     def sortPar(parList: Par[List[Int]]): Par[List[Int]] =
       map(parList)(_.sorted)
 
