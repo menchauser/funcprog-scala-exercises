@@ -26,15 +26,15 @@ final class Actor[A](strategy: Strategy)(handler: A => Unit, onError: Throwable 
   def contramap[B](f: B => A): Actor[B] =
     new Actor[B](strategy)((b: B) => this ! f(b), onError)
 
-  private def trySchedule() = {
+  private def trySchedule(): Unit = {
     if (suspended.compareAndSet(1, 0)) schedule()
   }
 
-  private def schedule() = {
+  private def schedule(): Unit = {
     strategy(act())
   }
 
-  private def act() = {
+  private def act(): Unit = {
     val t = tail.get()
     val n = batchHandle(t, 1024)
     if (n ne t) {

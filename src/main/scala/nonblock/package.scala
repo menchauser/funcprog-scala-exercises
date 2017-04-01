@@ -7,7 +7,7 @@ package object nonblock {
     private[nonblock] def apply(k: A => Unit): Unit
   }
 
-  type Par[+A] = ExecutorService => Future[A]
+  type Par[A] = ExecutorService => Future[A]
 
   def run[A](es: ExecutorService)(p: Par[A]): A = {
     val ref = new AtomicReference[A]
