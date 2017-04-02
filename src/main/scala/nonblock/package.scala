@@ -18,17 +18,19 @@ package object nonblock {
   }
 
   def unit[A](a: A): Par[A] = {
-    _ => new Future[A] {
-      override private[nonblock] def apply(k: (A) => Unit) =
-        k(a)
-    }
+    _ =>
+      new Future[A] {
+        override private[nonblock] def apply(k: (A) => Unit) =
+          k(a)
+      }
   }
 
   def fork[A](a: => Par[A]): Par[A] = {
-    es => new Future[A] {
-      override private[nonblock] def apply(k: (A) => Unit) =
-        eval(es)(a(es)(k))
-    }
+    es =>
+      new Future[A] {
+        override private[nonblock] def apply(k: (A) => Unit) =
+          eval(es)(a(es)(k))
+      }
   }
 
   private def eval(es: ExecutorService)(r: => Unit): Unit =
@@ -36,6 +38,26 @@ package object nonblock {
       override def call(): Unit = r
     })
 
-  def map2[A, B, C](a: Par[A], b: Par[B])(f: (A, B) => C): Par[C] = ???
+  def map2[A, B, C](p: Par[A], p2: Par[B])(f: (A, B) => C): Par[C] =
+    es => new Future[C] {
+      override private[nonblock] def apply(k: (C) => Unit) = {
+        var ar: Option[A] = None
+        var br: Option[B] = None
+
+        val combiner = Actor[Either[A, B]](es) {
+          case Left(a) => br match {
+            case None => ar = Some(a)
+            case Some(b) => eval(es)(k(f(a, b)))
+          }
+          case Right(b) => ar match {
+            case None => br = Some(b)
+            case Some(a) => eval(es)(k(f(a, b)))
+          }
+        }
+
+        p(es)(a => combiner ! Left(a))
+        p2(es)(b => combiner ! Right(b))
+      }
+    }
 
 }
