@@ -84,6 +84,55 @@ package object parallel {
       lp(e).get() == rp(e).get()
 
 
+    def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+      es =>
+        if (run(es)(cond).get()) t(es)
+        else f(es)
+
+    def choiceN[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+      es =>
+        run(es)(choices(run(es)(n).get))
+
+    def choice2[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+      choiceN(map(cond)(if (_) 0 else 1))(List(t, f))
+
+    def choiceMap[K, V](cond: Par[K])(choices: Map[K, Par[V]]): Par[V] =
+      es =>
+        run(es)(choices(run(es)(cond).get()))
+
+
+    def chooser[A, B](key: Par[A])(choices: A => Par[B]): Par[B] =
+      es =>
+        run(es)(choices(run(es)(key).get))
+
+    def choiceViaGeneral[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+      chooser(cond)(Map(true -> t, false -> f))
+
+    def choiceNViaGeneral[A](n: Par[Int])(choices: List[Par[A]]): Par[A] =
+      chooser(n)(choices)
+
+    def choiceMapViaGeneral[K, V](cond: Par[K])(choices: Map[K, Par[V]]): Par[V] =
+      chooser(cond)(choices)
+
+
+    def flatMap[A, B](a: Par[A])(f: A => Par[B]): Par[B] =
+      es => {
+        val a = run(es)(a).get()
+        run(es)(f(a))
+      }
+
+    def join[A](a: Par[Par[A]]): Par[A] =
+      es => {
+        val ra = run(es)(a).get()
+        run(es)(ra)
+      }
+
+    def flatMapViaJoin[A, B](a: Par[A])(f: A => Par[B]): Par[B] =
+      join(map(a)(f))
+
+    def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] =
+      flatMap(a)(identity)
+
     private case class UnitFuture[A](get: A) extends Future[A] {
       override def get(timeout: Long, unit: TimeUnit): A = get
 
