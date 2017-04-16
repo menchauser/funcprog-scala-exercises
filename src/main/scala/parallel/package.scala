@@ -117,8 +117,8 @@ package object parallel {
 
     def flatMap[A, B](a: Par[A])(f: A => Par[B]): Par[B] =
       es => {
-        val a = run(es)(a).get()
-        run(es)(f(a))
+        val getA: A = run(es)(a).get()
+        run(es)(f(getA))
       }
 
     def join[A](a: Par[Par[A]]): Par[A] =

@@ -14,6 +14,11 @@ case class SimpleRNG(seed: Long) extends RNG {
 }
 
 object RNG {
+  def boolean(rng: RNG): (Boolean, RNG) = {
+    val (n, nextRNG) = rng.nextInt
+    (n % 2 == 0, nextRNG)
+  }
+
   def nonNegativeInt(rng: RNG): (Int, RNG) = {
     val (n, nextRNG) = rng.nextInt
     val nonNegative =
